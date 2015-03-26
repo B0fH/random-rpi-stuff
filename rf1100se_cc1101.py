@@ -55,8 +55,8 @@ CC1101_CONFIG = [
     0x2E,  # IOCFG1              GDO1 Output Pin Configuration
     0x06,  # IOCFG0              GDO0 Output Pin Configuration
     0x47,  # FIFOTHR             RX FIFO and TX FIFO Thresholds
-    0xAA,  # SYNC1               Sync Word, High Byte
-    0xBB,  # SYNC0               Sync Word, Low Byte
+    0xD3,  # SYNC1               Sync Word, High Byte
+    0x91,  # SYNC0               Sync Word, Low Byte
     0xFF,  # PKTLEN              Packet Length
     0x04,  # PKTCTRL1            Packet Automation Control
     0x05,  # PKTCTRL0            Packet Automation Control
