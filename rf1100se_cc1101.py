@@ -5,7 +5,7 @@
 #Written by Elazar Broad
 
 #The register configuration has been exported from TI's SmartRF Studio
-#I highly reccommend youu utilize this tool to build your configuration as opposed to doing it by hand.
+#I highly reccommend you utilize this tool to build your configuration (as opposed to doing it by hand).
 
 import spidev
 import RPi.GPIO as GPIO
@@ -139,7 +139,7 @@ def CC1101_tx(txData):
 
 	sleep(2) #We should really be using GD0 here
 
-	#Veriy that the data was transmitted
+	#Verify that the data was transmitted
 	ret = CC1101_readBurst(REG_STATUS_TXBYTES, 1)
 	ret = ret[0] & 0x7F
 	if ret == 0:
