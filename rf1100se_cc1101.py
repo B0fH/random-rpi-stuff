@@ -4,13 +4,15 @@
 #Requires RPi.GPIO(https://pypi.python.org/pypi/RPi.GPIO) and spidev(https://pypi.python.org/pypi/spidev)
 #Written by Elazar Broad
 
-#The register configuration has been exported from TI's SmartRF Studio
-#I highly reccommend you utilize this tool to build your configuration (as opposed to doing it by hand).
+#The register configuration has been exported from TI's SmartRF Studio (v7)
+#I highly recommend you utilize this tool to build your configuration as opposed to doing it by hand.
 
 import spidev
 import RPi.GPIO as GPIO
-from time import sleep
+from array import array
 
+
+#Registers
 WRITE_BURST = 0x40
 READ_BURST = 0xC0
 
@@ -24,32 +26,35 @@ REG_STATUS_TXBYTES = 0x3A
 REG_PATABLE = 0x3E
 REG_FIFO_TX = 0x3F
 
+
+#GPIO Pins
 PIN_CS = 24 #RPi GPIO CE0
 PIN_GD0 = 7
 
-# RX filter BW = 58.035714
-# Sync word qualifier mode = 30/32 sync word bits detected
-# Packet length = 255
-# CRC enable = true
-# Preamble count = 2
-# Carrier frequency = 433.924988
-# Data rate = 1.19948
-# Channel spacing = 199.951172
-# TX power = 10
-# Whitening = false
-# CRC autoflush = false
-# Deviation = 5.157471
-# Channel number = 0
-# Address config = No address check
-# Base frequency = 433.924988
-# Modulated = true
-# Packet length mode = Variable packet length mode. Packet length configured by the first byte after sync word
-# Manchester enable = true
-# Modulation format = 2-FSK
-# Data format = Normal mode
-# PA ramping = false
-# Device address = 0
-# Rf settings for CC1101, exported from TI SmartRF Studio
+#####################
+# CRC enable = false 
+# Base frequency = 433.924988 
+# Sync word qualifier mode = 16/16 sync word bits detected 
+# Modulated = true 
+# Channel spacing = 199.951172 
+# Device address = 0 
+# TX power = 10 
+# Preamble count = 3 
+# Manchester enable = true 
+# Modulation format = 2-FSK 
+# Packet length = 255 
+# RX filter BW = 58.035714 
+# PA ramping = false 
+# Data rate = 2.39897 
+# Data format = Normal mode 
+# Whitening = false 
+# Carrier frequency = 433.924988 
+# Packet length mode = Variable packet length mode. Packet length configured by the first byte after sync word 
+# CRC autoflush = false 
+# Address config = No address check 
+# Channel number = 0 
+# Deviation = 5.157471 
+# Rf settings for CC1101
 CC1101_CONFIG = [
     0x29,  # IOCFG2              GDO2 Output Pin Configuration
     0x2E,  # IOCFG1              GDO1 Output Pin Configuration
@@ -59,7 +64,7 @@ CC1101_CONFIG = [
     0x91,  # SYNC0               Sync Word, Low Byte
     0xFF,  # PKTLEN              Packet Length
     0x04,  # PKTCTRL1            Packet Automation Control
-    0x05,  # PKTCTRL0            Packet Automation Control
+    0x01,  # PKTCTRL0            Packet Automation Control
     0x00,  # ADDR                Device Address
     0x00,  # CHANNR              Channel Number
     0x06,  # FSCTRL1             Frequency Synthesizer Control
@@ -67,10 +72,10 @@ CC1101_CONFIG = [
     0x10,  # FREQ2               Frequency Control Word, High Byte
     0xB0,  # FREQ1               Frequency Control Word, Middle Byte
     0x7E,  # FREQ0               Frequency Control Word, Low Byte
-    0xF5,  # MDMCFG4             Modem Configuration
+    0xF6,  # MDMCFG4             Modem Configuration
     0x83,  # MDMCFG3             Modem Configuration
-    0x0B,  # MDMCFG2             Modem Configuration
-    0x02,  # MDMCFG1             Modem Configuration
+    0x0A,  # MDMCFG2             Modem Configuration
+    0x12,  # MDMCFG1             Modem Configuration
     0xF8,  # MDMCFG0             Modem Configuration
     0x15,  # DEVIATN             Modem Deviation Setting
     0x07,  # MCSM2               Main Radio Control State Machine Configuration
@@ -97,14 +102,14 @@ CC1101_CONFIG = [
     0x3F,  # AGCTEST             AGC Test
     0x81,  # TEST2               Various Test Settings
     0x35,  # TEST1               Various Test Settings
-    0x09,  # TEST0               Various Test Settings
+    0x09  # TEST0               Various Test Settings
 ]
 
 def CC1101_readBurst(registerAddress, len):
-	GPIO.output(PIN_CS, GPIO.LOW)
+	#GPIO.output(PIN_CS, GPIO.LOW)
 	spi.xfer([registerAddress | READ_BURST,])
 	ret = spi.readbytes(len)
-	GPIO.output(PIN_CS, GPIO.HIGH)
+	#GPIO.output(PIN_CS, GPIO.HIGH)
 	return ret
 
 def CC1101_writeStrobe(registerAddress):
@@ -137,21 +142,31 @@ def CC1101_tx(txData):
 	#Transmit
 	CC1101_writeStrobe(REG_STROBE_TX)
 
-	sleep(2) #We should really be using GD0 here
-
-	#Verify that the data was transmitted
+	CC1101_waitGD0(GPIO.LOW)
+	
+	#Veriy that the data was transmitted
 	ret = CC1101_readBurst(REG_STATUS_TXBYTES, 1)
 	ret = ret[0] & 0x7F
 	if ret == 0:
 		return 1
 	return 0
 
+def CC1101_waitGD0(state):
+	while GPIO.input(PIN_GD0) != state:
+		sleep(0.01)
 
 
-#Setup chip select GPIO
+
+
+
+#Setup GPIO
 GPIO.setmode(GPIO.BOARD)
+
 GPIO.setup(PIN_CS, GPIO.OUT)
 GPIO.output(PIN_CS, GPIO.HIGH)
+
+GPIO.setup(PIN_GD0, GPIO.IN)
+
 
 #Open SPI device
 spi = spidev.SpiDev()
@@ -161,10 +176,14 @@ spi.open(0, 0)
 CC1101_init()
 
 #Transmit some data
-if CC1101_tx([0x31,0x32,0x33,0x34]): #1 2 3 4
+dataToSend = "Hello!"
+dataToSend = array('b', dataToSend)
+dataToSend = list(dataToSend)
+
+if CC1101_tx(dataToSend):
 	print "Data transmitted successfully!"
+else:
+	print "Transmit failed!"
 
 spi.close()
 GPIO.cleanup()
-
-
