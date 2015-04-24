@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-#Implement some very basic CC1101 functionality via SPI on the RasberryPI
+#Implement some very basic CC1101 functionality via SPI on the RaspberryPI
 #Requires RPi.GPIO(https://pypi.python.org/pypi/RPi.GPIO) and spidev(https://pypi.python.org/pypi/spidev)
 #Written by Elazar Broad
 
