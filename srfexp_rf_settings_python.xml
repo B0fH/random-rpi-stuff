@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<registerexporttemplate>
+  <name><![CDATA[RF settings Python]]></name>
+  <commentStart><![CDATA[#]]></commentStart>
+  <commentEnd><![CDATA[]]></commentEnd>
+  <paramSummary><![CDATA[1]]></paramSummary>
+  <paTable><![CDATA[0]]></paTable>
+  <header><![CDATA[# Rf settings for @CHIPID@
+@CHIPID@_CONFIG = [
+]]></header>
+  <registers><![CDATA[    0x@VH@,  @<<@# @RN@@<<@  @Rd@]]></registers>
+  <footer><![CDATA[]
+]]></footer>
+  <filename><![CDATA[@CHIPID@.py]]></filename>
+  <devices><![CDATA[]]></devices>
+</registerexporttemplate>
